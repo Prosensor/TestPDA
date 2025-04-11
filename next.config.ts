@@ -11,12 +11,6 @@ const nextConfig: NextConfig = {
   },
   // Ignorer les avertissements de taille de page
   reactStrictMode: true,
-  swcMinify: true,
-  // Ajouter cette option pour éviter les problèmes avec certaines dépendances
-  webpack: (config, { isServer }) => {
-    // Configurations webpack spécifiques si nécessaire
-    return config;
-  },
 };
 
 export default nextConfig;
