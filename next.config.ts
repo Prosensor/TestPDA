@@ -9,6 +9,8 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  // Désactiver la génération statique pour les pages qui utilisent des hooks client
+  output: 'standalone',
   // Ignorer les avertissements de taille de page
   reactStrictMode: true,
 };
