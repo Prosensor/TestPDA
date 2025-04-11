@@ -70,62 +70,61 @@ export async function POST(request: Request) {
       const dateObj = new Date(prescription.dateDebut)
       const dateFormatted = `${dateObj.getDate().toString().padStart(2, "0")}/${(dateObj.getMonth() + 1).toString().padStart(2, "0")}/${dateObj.getFullYear().toString().substring(2)}`
 
-      // Partie bleue en haut (fond)
-      doc.setFillColor(59, 130, 246) // Bleu
-      doc.rect(0, 0, 210, 30, "F")
+      // Fond blanc pour toute la page
+      doc.setFillColor(255, 255, 255) // Blanc
+      doc.rect(0, 0, 210, 105, "F")
 
-      // Texte dans la partie bleue
-      doc.setTextColor(255, 255, 255) // Blanc
+      // Partie supérieure - Nom du médicament
+      doc.setTextColor(0, 0, 0) // Noir
       doc.setFontSize(24)
       doc.setFont("helvetica", "bold")
-      doc.text(prescription.medicament.nom, 10, 15)
+      doc.text(prescription.medicament.nom, 20, 15) // Marge à gauche de 20mm
 
       doc.setFontSize(16)
       doc.setFont("helvetica", "normal")
-      doc.text("Pharmacie Mozart", 10, 25)
+      doc.text("Pharmacie Mozart", 20, 25)
 
-      // Partie verte (fond)
-      doc.setFillColor(34, 197, 94) // Vert
-      doc.rect(0, 30, 210, 50, "F")
+      // Ligne de séparation
+      doc.setDrawColor(0, 0, 0)
+      doc.line(10, 30, 200, 30)
 
-      // Texte dans la partie verte
-      doc.setTextColor(255, 255, 255) // Blanc
+      // Partie centrale - Informations patient et posologie
       doc.setFontSize(14)
       doc.setFont("helvetica", "bold")
-      doc.text("Pharmacie MOZART", 10, 40)
+      doc.text("Pharmacie MOZART", 20, 40)
 
       doc.setFontSize(14)
       doc.setFont("helvetica", "normal")
-      doc.text(`Patient : ${prescription.resident.nom} ${prescription.resident.prenom}`, 10, 50)
+      doc.text(`Patient : ${prescription.resident.nom} ${prescription.resident.prenom}`, 20, 50)
 
       doc.setFontSize(14)
-      doc.text(`${dateFormatted} ${prescription.medicament.nom.substring(0, 10)} ${prescription.posologie}`, 10, 60)
+      doc.text(`${dateFormatted} ${prescription.medicament.nom.substring(0, 10)} ${prescription.posologie}`, 20, 60)
 
       doc.setFontSize(16)
       doc.setFont("helvetica", "bold")
-      doc.text(prescription.posologie, 10, 70)
-      doc.text(momentText, 10, 80)
+      doc.text(prescription.posologie, 20, 70)
+      doc.text(momentText, 20, 80)
 
-      // Partie blanche en bas (fond)
-      doc.setFillColor(255, 255, 255) // Blanc
-      doc.rect(0, 80, 210, 25, "F")
+      // Ligne de séparation
+      doc.setDrawColor(0, 0, 0)
+      doc.line(10, 85, 200, 85)
 
-      // Texte dans la partie blanche
-      doc.setTextColor(100, 100, 100) // Gris
+      // Partie inférieure - Informations complémentaires
+      doc.setTextColor(0, 0, 0) // Noir
       doc.setFontSize(10)
       doc.setFont("helvetica", "normal")
-      doc.text(`Chambre ${prescription.resident.chambre}, Étage ${prescription.resident.etage}`, 10, 90)
+      doc.text(`Chambre ${prescription.resident.chambre}, Étage ${prescription.resident.etage}`, 20, 95)
     }
 
     // Convertir le PDF en Buffer
     const pdfBuffer = Buffer.from(doc.output("arraybuffer"))
 
-    // Renvoyer le PDF généré
+    // Renvoyer le PDF généré pour affichage direct dans le navigateur
     return new NextResponse(pdfBuffer, {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": "attachment; filename=etiquettes-pda.pdf",
+        "Content-Disposition": "inline; filename=etiquettes-pda.pdf",
       },
     })
   } catch (error) {

@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
-import { PrinterIcon, ArrowLeftIcon, DownloadIcon } from "lucide-react"
+import { PrinterIcon, ArrowLeftIcon } from "lucide-react"
 import Link from "next/link"
 import { useReactToPrint } from "react-to-print"
 
@@ -125,7 +125,7 @@ export default function EtiquettesPage() {
       return
     }
 
-    handlePrint()
+    handleDownloadPDF()
   }
 
   const handlePrint = useReactToPrint({
@@ -171,16 +171,13 @@ export default function EtiquettesPage() {
       // Créer un URL pour le blob
       const url = window.URL.createObjectURL(blob)
 
-      // Créer un lien pour télécharger le PDF
-      const a = document.createElement("a")
-      a.href = url
-      a.download = "etiquettes-pda.pdf"
-      document.body.appendChild(a)
-      a.click()
+      // Ouvrir le PDF dans un nouvel onglet
+      window.open(url, "_blank")
 
       // Nettoyer
-      window.URL.revokeObjectURL(url)
-      document.body.removeChild(a)
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url)
+      }, 1000)
 
       setLoading(false)
     } catch (error) {
@@ -349,19 +346,14 @@ export default function EtiquettesPage() {
               </div>
             )}
 
-            <div className="mt-6 space-y-2">
-              <Button className="w-full" onClick={handlePrintClick} disabled={selectedPrescriptions.length === 0}>
-                <PrinterIcon className="mr-2 h-4 w-4" />
-                Imprimer les étiquettes ({selectedPrescriptions.length})
-              </Button>
+            <div className="mt-6">
               <Button
                 className="w-full"
-                variant="outline"
                 onClick={handleDownloadPDF}
                 disabled={selectedPrescriptions.length === 0 || loading}
               >
-                <DownloadIcon className="mr-2 h-4 w-4" />
-                Télécharger en PDF ({selectedPrescriptions.length})
+                <PrinterIcon className="mr-2 h-4 w-4" />
+                Imprimer le PDF ({selectedPrescriptions.length})
               </Button>
             </div>
           </CardContent>
@@ -390,17 +382,17 @@ export default function EtiquettesPage() {
             return (
               <div
                 key={prescription.id}
-                className="border rounded-md overflow-hidden mx-auto"
+                className="border rounded-md overflow-hidden mx-auto bg-white"
                 style={{ width: "210mm", height: "105mm" }}
               >
-                {/* Partie bleue en haut avec le nom du médicament */}
-                <div className="bg-blue-600 text-white p-4">
+                <div className="p-4">
+                  {/* Nom du médicament */}
                   <div className="text-3xl font-bold">{prescription.medicament.nom}</div>
                   <div className="text-xl">Pharmacie Mozart</div>
                 </div>
 
-                {/* Partie verte avec les informations du patient et la posologie */}
-                <div className="bg-green-500 text-white p-4">
+                {/* Informations du patient et posologie */}
+                <div className="p-4 pl-8 border-t border-b">
                   <div className="text-lg font-bold">Pharmacie MOZART</div>
                   <div className="text-lg">
                     Patient : {prescription.resident.nom} {prescription.resident.prenom}
@@ -412,9 +404,9 @@ export default function EtiquettesPage() {
                   <div className="text-xl font-bold">{momentText}</div>
                 </div>
 
-                {/* Partie blanche en bas */}
-                <div className="bg-white p-4">
-                  <div className="text-sm text-gray-500">
+                {/* Informations complémentaires */}
+                <div className="p-4 pl-8">
+                  <div className="text-sm">
                     Chambre {prescription.resident.chambre}, Étage {prescription.resident.etage}
                   </div>
                 </div>
@@ -445,17 +437,17 @@ export default function EtiquettesPage() {
             return (
               <div
                 key={prescription.id}
-                className="page-break-after border-none overflow-hidden"
+                className="page-break-after border-none overflow-hidden bg-white"
                 style={{ width: "210mm", height: "105mm", pageBreakAfter: "always" }}
               >
-                {/* Partie bleue en haut avec le nom du médicament */}
-                <div className="bg-blue-600 text-white p-4">
+                <div className="p-4">
+                  {/* Nom du médicament */}
                   <div className="text-3xl font-bold">{prescription.medicament.nom}</div>
                   <div className="text-xl">Pharmacie Mozart</div>
                 </div>
 
-                {/* Partie verte avec les informations du patient et la posologie */}
-                <div className="bg-green-500 text-white p-4">
+                {/* Informations du patient et posologie */}
+                <div className="p-4 pl-8 border-t border-b">
                   <div className="text-lg font-bold">Pharmacie MOZART</div>
                   <div className="text-lg">
                     Patient : {prescription.resident.nom} {prescription.resident.prenom}
@@ -467,9 +459,9 @@ export default function EtiquettesPage() {
                   <div className="text-xl font-bold">{momentText}</div>
                 </div>
 
-                {/* Partie blanche en bas */}
-                <div className="bg-white p-4">
-                  <div className="text-sm text-gray-500">
+                {/* Informations complémentaires */}
+                <div className="p-4 pl-8">
+                  <div className="text-sm">
                     Chambre {prescription.resident.chambre}, Étage {prescription.resident.etage}
                   </div>
                 </div>
