@@ -76,62 +76,37 @@ export async function POST(request: Request) {
 
       // Partie supérieure - Nom du médicament
       doc.setTextColor(0, 0, 0) // Noir
-      doc.setFontSize(28) // Taille augmentée
+      doc.setFontSize(24)
       doc.setFont("helvetica", "bold")
-      doc.text(prescription.medicament.nom, 20, 15)
+      doc.text(prescription.medicament.nom, 40, 15) // Marge à gauche à 40mm
 
       doc.setFontSize(16)
       doc.setFont("helvetica", "normal")
-      doc.text("Pharmacie Mozart", 20, 25)
-
-      // Ligne de séparation (de bord à bord)
-      doc.setDrawColor(0, 0, 0)
-      doc.setLineWidth(0.5) // Épaisseur de ligne augmentée
-      doc.line(5, 30, 205, 30)
+      doc.text("Pharmacie Mozart", 40, 25) // Marge à gauche à 40mm
 
       // Partie centrale - Informations patient et posologie
-      doc.setFontSize(16)
+      doc.setFontSize(14)
       doc.setFont("helvetica", "bold")
-      doc.text("Pharmacie MOZART", 20, 40)
+      doc.text(prescription.resident.etablissement.nom, 40, 40) // Nom de l'établissement au lieu de "Pharmacie MOZART"
 
       doc.setFontSize(14)
       doc.setFont("helvetica", "normal")
-      doc.text(`Patient : ${prescription.resident.nom} ${prescription.resident.prenom}`, 20, 50)
+      doc.text(`Patient : ${prescription.resident.nom} ${prescription.resident.prenom}`, 40, 50)
 
       doc.setFontSize(14)
-      doc.text(`${dateFormatted} ${prescription.medicament.nom.substring(0, 10)} ${prescription.posologie}`, 20, 60)
+      doc.text(`${dateFormatted} ${prescription.medicament.nom.substring(0, 10)} ${prescription.posologie}`, 40, 60)
 
-      // Posologie en gras et plus grand
-      doc.setFontSize(20)
+      doc.setFontSize(16)
       doc.setFont("helvetica", "bold")
-      doc.text(prescription.posologie, 20, 72)
-
-      // Moments de prise en gras et plus grand
-      doc.setFontSize(20)
-      doc.setFont("helvetica", "bold")
-      doc.text(momentText, 20, 82)
-
-      // Ligne de séparation (de bord à bord)
-      doc.setDrawColor(0, 0, 0)
-      doc.setLineWidth(0.5) // Épaisseur de ligne augmentée
-      doc.line(5, 88, 205, 88)
+      doc.text(prescription.posologie, 40, 70)
+      doc.text(momentText, 40, 80)
 
       // Partie inférieure - Informations complémentaires
       doc.setTextColor(0, 0, 0) // Noir
-      doc.setFontSize(12)
+      doc.setFontSize(10)
       doc.setFont("helvetica", "normal")
-      doc.text(`Chambre ${prescription.resident.chambre}, Étage ${prescription.resident.etage}`, 20, 98)
+      doc.text(`Chambre ${prescription.resident.chambre}, Étage ${prescription.resident.etage}`, 40, 95)
     }
-
-    // Ajouter un script JavaScript pour déclencher l'impression automatiquement
-    doc.setPage(1)
-    doc.addJS(`
-      this.print({
-        silent: false,
-        printBackground: true,
-        headerFooter: false
-      });
-    `)
 
     // Convertir le PDF en Buffer
     const pdfBuffer = Buffer.from(doc.output("arraybuffer"))
