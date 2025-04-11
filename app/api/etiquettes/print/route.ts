@@ -116,6 +116,16 @@ export async function POST(request: Request) {
       doc.text(`Chambre ${prescription.resident.chambre}, Étage ${prescription.resident.etage}`, 40, 95) // Marge à gauche augmentée à 40mm
     }
 
+    // Ajouter un script JavaScript pour déclencher l'impression automatiquement
+    doc.setPage(1)
+    doc.addJS(`
+      this.print({
+        silent: false,
+        printBackground: true,
+        headerFooter: false
+      });
+    `)
+
     // Convertir le PDF en Buffer
     const pdfBuffer = Buffer.from(doc.output("arraybuffer"))
 

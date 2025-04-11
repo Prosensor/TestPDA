@@ -172,7 +172,14 @@ export default function EtiquettesPage() {
       const url = window.URL.createObjectURL(blob)
 
       // Ouvrir le PDF dans un nouvel onglet
-      window.open(url, "_blank")
+      const newWindow = window.open(url, "_blank")
+
+      // Déclencher l'impression automatiquement
+      if (newWindow) {
+        newWindow.addEventListener("load", () => {
+          newWindow.print()
+        })
+      }
 
       // Nettoyer
       setTimeout(() => {
@@ -385,14 +392,14 @@ export default function EtiquettesPage() {
                 className="border rounded-md overflow-hidden mx-auto bg-white"
                 style={{ width: "210mm", height: "105mm" }}
               >
-                <div className="p-4">
+                <div className="p-4 pl-10">
                   {/* Nom du médicament */}
                   <div className="text-3xl font-bold">{prescription.medicament.nom}</div>
                   <div className="text-xl">Pharmacie Mozart</div>
                 </div>
 
                 {/* Informations du patient et posologie */}
-                <div className="p-4 pl-8 border-t border-b">
+                <div className="p-4 pl-10 border-t border-b">
                   <div className="text-lg font-bold">Pharmacie MOZART</div>
                   <div className="text-lg">
                     Patient : {prescription.resident.nom} {prescription.resident.prenom}
@@ -405,7 +412,7 @@ export default function EtiquettesPage() {
                 </div>
 
                 {/* Informations complémentaires */}
-                <div className="p-4 pl-8">
+                <div className="p-4 pl-10">
                   <div className="text-sm">
                     Chambre {prescription.resident.chambre}, Étage {prescription.resident.etage}
                   </div>
@@ -440,14 +447,14 @@ export default function EtiquettesPage() {
                 className="page-break-after border-none overflow-hidden bg-white"
                 style={{ width: "210mm", height: "105mm", pageBreakAfter: "always" }}
               >
-                <div className="p-4">
+                <div className="p-4 pl-10">
                   {/* Nom du médicament */}
                   <div className="text-3xl font-bold">{prescription.medicament.nom}</div>
                   <div className="text-xl">Pharmacie Mozart</div>
                 </div>
 
                 {/* Informations du patient et posologie */}
-                <div className="p-4 pl-8 border-t border-b">
+                <div className="p-4 pl-10 border-t border-b">
                   <div className="text-lg font-bold">Pharmacie MOZART</div>
                   <div className="text-lg">
                     Patient : {prescription.resident.nom} {prescription.resident.prenom}
@@ -460,7 +467,7 @@ export default function EtiquettesPage() {
                 </div>
 
                 {/* Informations complémentaires */}
-                <div className="p-4 pl-8">
+                <div className="p-4 pl-10">
                   <div className="text-sm">
                     Chambre {prescription.resident.chambre}, Étage {prescription.resident.etage}
                   </div>
