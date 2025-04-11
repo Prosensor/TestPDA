@@ -6,9 +6,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
-import { PrinterIcon, ArrowLeftIcon } from "lucide-react"
+import { PrinterIcon, ArrowLeftIcon, DownloadIcon } from "lucide-react"
 import Link from "next/link"
 import { useReactToPrint } from "react-to-print"
+import jsPDF from "jspdf"
+import { toPng } from "html-to-image"
 
 type Etablissement = {
   id: string
@@ -54,6 +56,7 @@ export default function EtiquettesPage() {
   const [selectedPrescriptions, setSelectedPrescriptions] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const printRef = useRef<HTMLDivElement>(null)
+  const etiquetteRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
 
   useEffect(() => {
     fetchEtablissements()
@@ -143,6 +146,101 @@ export default function EtiquettesPage() {
     },
   })
 
+  // Remplacer la fonction handleDownloadPDF par celle-ci pour corriger les dimensions du PDF
+  const handleDownloadPDF = async () => {
+    if (selectedPrescriptions.length === 0) {
+      console.error("Aucune prescription sélectionnée")
+      return
+    }
+
+    try {
+      setLoading(true)
+
+      // Créer un nouveau document PDF avec les dimensions exactes 105mm x 210mm
+      const doc = new jsPDF({
+        orientation: "landscape",
+        unit: "mm",
+        format: [105, 210],
+      })
+
+      // Générer un PDF pour chaque prescription sélectionnée
+      for (let i = 0; i < selectedPrescriptions.length; i++) {
+        const id = selectedPrescriptions[i]
+        const prescription = prescriptions.find((p) => p.id === id)
+
+        if (!prescription) continue
+
+        if (i > 0) {
+          doc.addPage([105, 210], "landscape")
+        }
+
+        // Référence à l'élément DOM de l'étiquette
+        const etiquetteRef = etiquetteRefs.current[id]
+        if (!etiquetteRef) continue
+
+        // Convertir l'élément HTML en image PNG
+        const dataUrl = await toPng(etiquetteRef, { quality: 1.0, pixelRatio: 3 })
+
+        // Ajouter l'image au PDF en respectant les dimensions
+        doc.addImage(dataUrl, "PNG", 0, 0, 210, 105)
+      }
+
+      // Télécharger le PDF
+      doc.save("etiquettes-pda.pdf")
+      setLoading(false)
+    } catch (error) {
+      console.error("Erreur lors de la génération du PDF:", error)
+      setLoading(false)
+    }
+  }
+
+  // Ajouter cette fonction pour télécharger le PDF directement depuis le serveur
+  const handleServerPDF = async () => {
+    if (selectedPrescriptions.length === 0) {
+      console.error("Aucune prescription sélectionnée")
+      return
+    }
+
+    try {
+      setLoading(true)
+
+      // Appeler l'API pour générer le PDF côté serveur
+      const response = await fetch("/api/etiquettes/download", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ prescriptionIds: selectedPrescriptions }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Erreur lors de la génération du PDF")
+      }
+
+      // Créer un blob à partir de la réponse
+      const blob = await response.blob()
+
+      // Créer un URL pour le blob
+      const url = window.URL.createObjectURL(blob)
+
+      // Créer un lien pour télécharger le PDF
+      const a = document.createElement("a")
+      a.href = url
+      a.download = "etiquettes-pda.pdf"
+      document.body.appendChild(a)
+      a.click()
+
+      // Nettoyer
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+
+      setLoading(false)
+    } catch (error) {
+      console.error("Erreur lors de la génération du PDF:", error)
+      setLoading(false)
+    }
+  }
+
   const toggleResident = (residentId: string) => {
     setSelectedResidents((prev) =>
       prev.includes(residentId) ? prev.filter((id) => id !== residentId) : [...prev, residentId],
@@ -194,6 +292,7 @@ export default function EtiquettesPage() {
     return prescription.posologie
   }
 
+  // Remplacer la section d'aperçu des étiquettes
   return (
     <div className="p-6">
       <div className="flex items-center mb-6">
@@ -303,57 +402,150 @@ export default function EtiquettesPage() {
               </div>
             )}
 
-            <div className="mt-6">
+            <div className="mt-6 space-y-2">
               <Button className="w-full" onClick={handlePrintClick} disabled={selectedPrescriptions.length === 0}>
                 <PrinterIcon className="mr-2 h-4 w-4" />
                 Imprimer les étiquettes ({selectedPrescriptions.length})
+              </Button>
+              <Button
+                className="w-full"
+                variant="outline"
+                onClick={handleServerPDF}
+                disabled={selectedPrescriptions.length === 0 || loading}
+              >
+                <DownloadIcon className="mr-2 h-4 w-4" />
+                Télécharger en PDF ({selectedPrescriptions.length})
               </Button>
             </div>
           </CardContent>
         </Card>
       </div>
 
+      {/* Aperçu des étiquettes */}
+      <div className="mt-6">
+        <h3 className="text-xl font-bold mb-4">Aperçu des étiquettes</h3>
+        <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
+          {selectedPrescriptions.map((id) => {
+            const prescription = prescriptions.find((p) => p.id === id)
+            if (!prescription) return null
+
+            // Formatage des moments de prise pour l'étiquette
+            const moments = []
+            if (prescription.matin) moments.push("Matin")
+            if (prescription.midi) moments.push("Midi")
+            if (prescription.soir) moments.push("Soir")
+            if (prescription.coucher) moments.push("Coucher")
+            if (prescription.autreHoraire) moments.push(prescription.autreHoraire)
+
+            const momentText = moments.length > 0 ? moments.join(", ") : `${prescription.frequence} fois par jour`
+            const codeBarreValue = `${prescription.id.substring(0, 10)}`
+
+            return (
+              <div
+                key={prescription.id}
+                className="border rounded-md p-4 bg-white mx-auto"
+                style={{ width: "210mm", height: "105mm" }}
+                ref={(el) => (etiquetteRefs.current[prescription.id] = el)}
+              >
+                <div className="flex flex-col items-center justify-center h-full">
+                  {/* Établissement */}
+                  <div className="text-xs font-bold mb-1">{prescription.resident.etablissement.nom}</div>
+
+                  {/* Nom du médicament (designation) */}
+                  <div className="text-4xl font-bold mb-2">{prescription.medicament.nom}</div>
+
+                  {/* Posologie (designation1) */}
+                  <div className="text-2xl mb-4">{prescription.posologie}</div>
+
+                  {/* Simuler un code-barres */}
+                  <div className="w-3/4 h-16 bg-gray-200 mb-4 flex items-center justify-center">
+                    <div className="text-sm text-gray-500">Code-barres: {codeBarreValue}</div>
+                  </div>
+
+                  {/* Informations du résident */}
+                  <div className="text-lg mb-2">
+                    {prescription.resident.nom} {prescription.resident.prenom}
+                  </div>
+
+                  <div className="text-sm mb-2">
+                    Chambre {prescription.resident.chambre}, Étage {prescription.resident.etage}
+                  </div>
+
+                  {/* Moment de prise (emplacement) */}
+                  <div className="text-4xl font-bold mt-2">{momentText}</div>
+
+                  {/* Date de début */}
+                  <div className="text-xs mt-2">
+                    Date: {formatDate(prescription.dateDebut)}
+                    {prescription.dateFin ? ` - ${formatDate(prescription.dateFin)}` : ""}
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
       {/* Zone d'impression (visible mais cachée à l'écran) */}
       <div className="hidden print:block">
-        <div ref={printRef} className="p-4">
-          {selectedPrescriptions.length > 0 && (
-            <div className="grid grid-cols-2 gap-4">
-              {selectedPrescriptions.map((id) => {
-                const prescription = prescriptions.find((p) => p.id === id)
-                if (!prescription) return null
+        <div ref={printRef}>
+          {selectedPrescriptions.map((id) => {
+            const prescription = prescriptions.find((p) => p.id === id)
+            if (!prescription) return null
 
-                // Formatage des moments de prise pour l'étiquette
-                const moments = []
-                if (prescription.matin) moments.push("Matin")
-                if (prescription.midi) moments.push("Midi")
-                if (prescription.soir) moments.push("Soir")
-                if (prescription.coucher) moments.push("Coucher")
-                if (prescription.autreHoraire) moments.push(prescription.autreHoraire)
+            // Formatage des moments de prise pour l'étiquette
+            const moments = []
+            if (prescription.matin) moments.push("Matin")
+            if (prescription.midi) moments.push("Midi")
+            if (prescription.soir) moments.push("Soir")
+            if (prescription.coucher) moments.push("Coucher")
+            if (prescription.autreHoraire) moments.push(prescription.autreHoraire)
 
-                const momentText = moments.length > 0 ? moments.join(", ") : `${prescription.frequence} fois par jour`
+            const momentText = moments.length > 0 ? moments.join(", ") : `${prescription.frequence} fois par jour`
+            const codeBarreValue = `${prescription.id.substring(0, 10)}`
 
-                return (
-                  <div
-                    key={prescription.id}
-                    className="border rounded-md p-4 mb-4 page-break-inside-avoid"
-                    style={{ width: "10cm", height: "5cm" }}
-                  >
-                    <div className="text-xs font-bold mb-1">{prescription.resident.etablissement.nom}</div>
-                    <div className="text-sm font-bold">
-                      {prescription.resident.nom} {prescription.resident.prenom}
-                    </div>
-                    <div className="text-xs mb-1">
-                      Chambre {prescription.resident.chambre}, Étage {prescription.resident.etage}
-                    </div>
-                    <div className="text-sm font-bold mt-2">{prescription.medicament.nom}</div>
-                    <div className="text-xs">Date: {formatDate(prescription.dateDebut)}</div>
-                    <div className="text-sm mt-1">Posologie: {prescription.posologie}</div>
-                    <div className="text-sm">{momentText}</div>
+            return (
+              <div
+                key={prescription.id}
+                className="page-break-after border-none"
+                style={{ width: "210mm", height: "105mm", pageBreakAfter: "always" }}
+              >
+                <div className="flex flex-col items-center justify-center h-full">
+                  {/* Établissement */}
+                  <div className="text-xs font-bold mb-1">{prescription.resident.etablissement.nom}</div>
+
+                  {/* Nom du médicament (designation) */}
+                  <div className="text-4xl font-bold mb-2">{prescription.medicament.nom}</div>
+
+                  {/* Posologie (designation1) */}
+                  <div className="text-2xl mb-4">{prescription.posologie}</div>
+
+                  {/* Simuler un code-barres */}
+                  <div className="w-3/4 h-16 bg-gray-200 mb-4 flex items-center justify-center">
+                    <div className="text-sm text-gray-500">Code-barres: {codeBarreValue}</div>
                   </div>
-                )
-              })}
-            </div>
-          )}
+
+                  {/* Informations du résident */}
+                  <div className="text-lg mb-2">
+                    {prescription.resident.nom} {prescription.resident.prenom}
+                  </div>
+
+                  <div className="text-sm mb-2">
+                    Chambre {prescription.resident.chambre}, Étage {prescription.resident.etage}
+                  </div>
+
+                  {/* Moment de prise (emplacement) */}
+                  <div className="text-4xl font-bold mt-2">{momentText}</div>
+
+                  {/* Date de début */}
+                  <div className="text-xs mt-2">
+                    Date: {formatDate(prescription.dateDebut)}
+                    {prescription.dateFin ? ` - ${formatDate(prescription.dateFin)}` : ""}
+                  </div>
+                </div>
+              </div>
+            )
+          })}
         </div>
       </div>
     </div>

@@ -124,20 +124,23 @@
 /* Styles pour l'impression */
 @media print {
   @page {
-    size: A4;
-    margin: 0.5cm;
+    size: 210mm 105mm landscape;
+    margin: 0;
+    padding: 0;
   }
 
   body {
     margin: 0;
     padding: 0;
+    width: 210mm;
+    height: 105mm;
   }
 
   .print\:block {
     display: block !important;
   }
 
-  .page-break-inside-avoid {
-    page-break-inside: avoid;
+  .page-break-after {
+    page-break-after: always;
   }
 }
