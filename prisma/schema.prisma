@@ -1,0 +1,110 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  password      String?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// Nouveaux modèles pour les étiquettes PDA
+
+model Etablissement {
+  id        String     @id @default(cuid())
+  nom       String
+  adresse   String?
+  telephone String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  residents Resident[]
+}
+
+model Resident {
+  id             String           @id @default(cuid())
+  nom            String
+  prenom         String
+  chambre        String
+  etage          String
+  dateNaissance  DateTime?
+  etablissementId String
+  etablissement  Etablissement    @relation(fields: [etablissementId], references: [id])
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  prescriptions  Prescription[]
+}
+
+model Medicament {
+  id            String          @id @default(cuid())
+  nom           String
+  description   String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  prescriptions Prescription[]
+}
+
+model Prescription {
+  id           String    @id @default(cuid())
+  residentId   String
+  resident     Resident  @relation(fields: [residentId], references: [id])
+  medicamentId String
+  medicament   Medicament @relation(fields: [medicamentId], references: [id])
+  posologie    String
+  // Nouveaux champs pour les moments de prise
+  matin        Boolean   @default(false)
+  midi         Boolean   @default(false)
+  soir         Boolean   @default(false)
+  coucher      Boolean   @default(false)
+  autreHoraire String?   // Pour des horaires spécifiques comme "10h", "14h", etc.
+  frequence    Int       // Conservé pour compatibilité
+  dateDebut    DateTime
+  dateFin      DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
