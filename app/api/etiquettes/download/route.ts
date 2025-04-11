@@ -76,35 +76,36 @@ export async function POST(request: Request) {
 
       // Partie supérieure - Nom du médicament
       doc.setTextColor(0, 0, 0) // Noir
-      doc.setFontSize(24)
+      doc.setFontSize(32) // Augmenté de 24 à 32
       doc.setFont("helvetica", "bold")
       doc.text(prescription.medicament.nom, 40, 15) // Marge à gauche à 40mm
 
-      doc.setFontSize(16)
-      doc.setFont("helvetica", "normal")
+      doc.setFontSize(20) // Augmenté de 16 à 20
+      doc.setFont("helvetica", "bold") // Changé de normal à bold
       doc.text("Pharmacie Mozart", 40, 25) // Marge à gauche à 40mm
 
       // Partie centrale - Informations patient et posologie
-      doc.setFontSize(14)
+      doc.setFontSize(18) // Augmenté de 14 à 18
       doc.setFont("helvetica", "bold")
       doc.text(prescription.resident.etablissement.nom, 40, 40) // Nom de l'établissement au lieu de "Pharmacie MOZART"
 
-      doc.setFontSize(14)
-      doc.setFont("helvetica", "normal")
+      doc.setFontSize(18) // Augmenté de 14 à 18
+      doc.setFont("helvetica", "bold") // Changé de normal à bold
       doc.text(`Patient : ${prescription.resident.nom} ${prescription.resident.prenom}`, 40, 50)
 
-      doc.setFontSize(14)
+      doc.setFontSize(16) // Augmenté de 14 à 16
+      doc.setFont("helvetica", "bold") // Changé de normal à bold
       doc.text(`${dateFormatted} ${prescription.medicament.nom.substring(0, 10)} ${prescription.posologie}`, 40, 60)
 
-      doc.setFontSize(16)
+      doc.setFontSize(22) // Augmenté de 16 à 22
       doc.setFont("helvetica", "bold")
       doc.text(prescription.posologie, 40, 70)
       doc.text(momentText, 40, 80)
 
       // Partie inférieure - Informations complémentaires
       doc.setTextColor(0, 0, 0) // Noir
-      doc.setFontSize(10)
-      doc.setFont("helvetica", "normal")
+      doc.setFontSize(14) // Augmenté de 10 à 14
+      doc.setFont("helvetica", "bold") // Changé de normal à bold
       doc.text(`Chambre ${prescription.resident.chambre}, Étage ${prescription.resident.etage}`, 40, 95)
     }
 

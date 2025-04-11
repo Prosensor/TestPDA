@@ -394,26 +394,26 @@ export default function EtiquettesPage() {
               >
                 <div className="p-4 pl-10">
                   {/* Nom du médicament */}
-                  <div className="text-3xl font-bold">{prescription.medicament.nom}</div>
-                  <div className="text-xl">Pharmacie Mozart</div>
+                  <div className="text-4xl font-bold">{prescription.medicament.nom}</div>
+                  <div className="text-2xl font-bold">Pharmacie Mozart</div>
                 </div>
 
                 {/* Informations du patient et posologie */}
                 <div className="p-4 pl-10">
-                  <div className="text-lg font-bold">{prescription.resident.etablissement.nom}</div>
-                  <div className="text-lg">
+                  <div className="text-2xl font-bold">{prescription.resident.etablissement.nom}</div>
+                  <div className="text-xl font-bold">
                     Patient : {prescription.resident.nom} {prescription.resident.prenom}
                   </div>
-                  <div className="text-lg">
+                  <div className="text-xl font-bold">
                     {dateFormatted} {prescription.medicament.nom.substring(0, 10)} {prescription.posologie}
                   </div>
-                  <div className="text-xl font-bold mt-2">{prescription.posologie}</div>
-                  <div className="text-xl font-bold">{momentText}</div>
+                  <div className="text-2xl font-bold mt-2">{prescription.posologie}</div>
+                  <div className="text-2xl font-bold">{momentText}</div>
                 </div>
 
                 {/* Informations complémentaires */}
                 <div className="p-4 pl-10">
-                  <div className="text-sm">
+                  <div className="text-lg font-bold">
                     Chambre {prescription.resident.chambre}, Étage {prescription.resident.etage}
                   </div>
                 </div>
@@ -449,26 +449,26 @@ export default function EtiquettesPage() {
               >
                 <div className="p-4 pl-10">
                   {/* Nom du médicament */}
-                  <div className="text-3xl font-bold">{prescription.medicament.nom}</div>
-                  <div className="text-xl">Pharmacie Mozart</div>
+                  <div className="text-4xl font-bold">{prescription.medicament.nom}</div>
+                  <div className="text-2xl font-bold">Pharmacie Mozart</div>
                 </div>
 
                 {/* Informations du patient et posologie */}
                 <div className="p-4 pl-10">
-                  <div className="text-lg font-bold">{prescription.resident.etablissement.nom}</div>
-                  <div className="text-lg">
+                  <div className="text-2xl font-bold">{prescription.resident.etablissement.nom}</div>
+                  <div className="text-xl font-bold">
                     Patient : {prescription.resident.nom} {prescription.resident.prenom}
                   </div>
-                  <div className="text-lg">
+                  <div className="text-xl font-bold">
                     {dateFormatted} {prescription.medicament.nom.substring(0, 10)} {prescription.posologie}
                   </div>
-                  <div className="text-xl font-bold mt-2">{prescription.posologie}</div>
-                  <div className="text-xl font-bold">{momentText}</div>
+                  <div className="text-2xl font-bold mt-2">{prescription.posologie}</div>
+                  <div className="text-2xl font-bold">{momentText}</div>
                 </div>
 
                 {/* Informations complémentaires */}
                 <div className="p-4 pl-10">
-                  <div className="text-sm">
+                  <div className="text-lg font-bold">
                     Chambre {prescription.resident.chambre}, Étage {prescription.resident.etage}
                   </div>
                 </div>
