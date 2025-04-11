@@ -2,8 +2,6 @@ import { NextResponse } from "next/server"
 import { auth } from "@/auth"
 import { PrismaClient } from "@prisma/client"
 import { jsPDF } from "jspdf"
-import { createCanvas } from "canvas"
-import JsBarcode from "jsbarcode"
 
 const prisma = new PrismaClient()
 
@@ -43,24 +41,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "Aucune prescription trouvée" }, { status: 404 })
     }
 
-    // Créer un nouveau document PDF
+    // Créer un nouveau document PDF avec les dimensions exactes
     const doc = new jsPDF({
       orientation: "landscape",
       unit: "mm",
       format: [105, 210],
     })
-
-    // Fonction pour générer le code-barres
-    const generateBarcode = (value: string): string => {
-      const canvas = createCanvas(400, 150)
-      JsBarcode(canvas, value, {
-        format: "CODE128",
-        width: 3,
-        height: 70,
-        displayValue: false,
-      })
-      return canvas.toDataURL()
-    }
 
     // Générer un PDF pour chaque prescription
     for (let i = 0; i < prescriptions.length; i++) {
@@ -72,55 +58,63 @@ export async function POST(request: Request) {
 
       // Formatage des moments de prise
       const moments = []
-      if (prescription.matin) moments.push("Matin")
-      if (prescription.midi) moments.push("Midi")
-      if (prescription.soir) moments.push("Soir")
-      if (prescription.coucher) moments.push("Coucher")
+      if (prescription.matin) moments.push("MATIN")
+      if (prescription.midi) moments.push("MIDI")
+      if (prescription.soir) moments.push("SOIR")
+      if (prescription.coucher) moments.push("COUCHER")
       if (prescription.autreHoraire) moments.push(prescription.autreHoraire)
 
-      const momentText = moments.length > 0 ? moments.join(", ") : `${prescription.frequence} fois par jour`
-      const codeBarreValue = `${prescription.id.substring(0, 10)}`
+      const momentText = moments.length > 0 ? moments.join(", ") : `${prescription.frequence}x/jour`
 
-      // Générer le code-barres
-      const barcodeDataUrl = generateBarcode(codeBarreValue)
+      // Formater la date
+      const dateObj = new Date(prescription.dateDebut)
+      const dateFormatted = `${dateObj.getDate().toString().padStart(2, "0")}/${(dateObj.getMonth() + 1).toString().padStart(2, "0")}/${dateObj.getFullYear().toString().substring(2)}`
 
-      // Établissement (petit texte en haut)
-      doc.setFontSize(8)
-      doc.setFont("helvetica", "bold")
-      doc.text(prescription.resident.etablissement.nom, 105, 10, { align: "center" })
+      // Partie bleue en haut (fond)
+      doc.setFillColor(59, 130, 246) // Bleu
+      doc.rect(0, 0, 210, 30, "F")
 
-      // Nom du médicament (designation - gros texte)
-      doc.setFontSize(32)
-      doc.setFont("helvetica", "bold")
-      doc.text(prescription.medicament.nom, 105, 20, { align: "center" })
-
-      // Posologie (designation1 - texte moyen)
+      // Texte dans la partie bleue
+      doc.setTextColor(255, 255, 255) // Blanc
       doc.setFontSize(24)
-      doc.setFont("helvetica", "normal")
-      doc.text(prescription.posologie, 105, 32, { align: "center" })
-
-      // Ajout du code-barres
-      doc.addImage(barcodeDataUrl, "PNG", 30, 38, 150, 30)
-
-      // Code-barres texte
-      doc.setFontSize(16)
       doc.setFont("helvetica", "bold")
-      doc.text(codeBarreValue, 105, 78, { align: "center" })
+      doc.text(prescription.medicament.nom, 10, 15)
 
-      // Informations du résident
+      doc.setFontSize(16)
+      doc.setFont("helvetica", "normal")
+      doc.text("Pharmacie Mozart", 10, 25)
+
+      // Partie verte (fond)
+      doc.setFillColor(34, 197, 94) // Vert
+      doc.rect(0, 30, 210, 50, "F")
+
+      // Texte dans la partie verte
+      doc.setTextColor(255, 255, 255) // Blanc
+      doc.setFontSize(14)
+      doc.setFont("helvetica", "bold")
+      doc.text("Pharmacie MOZART", 10, 40)
+
       doc.setFontSize(14)
       doc.setFont("helvetica", "normal")
-      doc.text(`${prescription.resident.nom} ${prescription.resident.prenom}`, 105, 85, { align: "center" })
+      doc.text(`Patient : ${prescription.resident.nom} ${prescription.resident.prenom}`, 10, 50)
 
-      doc.setFontSize(12)
-      doc.text(`Chambre ${prescription.resident.chambre}, Étage ${prescription.resident.etage}`, 105, 92, {
-        align: "center",
-      })
+      doc.setFontSize(14)
+      doc.text(`${dateFormatted} ${prescription.medicament.nom.substring(0, 10)} ${prescription.posologie}`, 10, 60)
 
-      // Moment de prise (emplacement - gros texte en bas)
-      doc.setFontSize(32)
+      doc.setFontSize(16)
       doc.setFont("helvetica", "bold")
-      doc.text(momentText, 105, 102, { align: "center" })
+      doc.text(prescription.posologie, 10, 70)
+      doc.text(momentText, 10, 80)
+
+      // Partie blanche en bas (fond)
+      doc.setFillColor(255, 255, 255) // Blanc
+      doc.rect(0, 80, 210, 25, "F")
+
+      // Texte dans la partie blanche
+      doc.setTextColor(100, 100, 100) // Gris
+      doc.setFontSize(10)
+      doc.setFont("helvetica", "normal")
+      doc.text(`Chambre ${prescription.resident.chambre}, Étage ${prescription.resident.etage}`, 10, 90)
     }
 
     // Convertir le PDF en Buffer
