@@ -1,12 +1,9 @@
-import { redirect } from "next/navigation"
-import { auth } from "@/auth"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import Link from "next/link"
+import { auth } from "@/auth"
+import { redirect } from "next/navigation"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { PrismaClient } from "@prisma/client"
-import { PrinterIcon, UsersIcon, HomeIcon, PillIcon } from "lucide-react"
-
-const prisma = new PrismaClient()
+import { PrinterIcon, UsersIcon, HomeIcon, FileTextIcon, ArrowRightIcon, ClipboardListIcon } from "lucide-react"
 
 export default async function Dashboard() {
   const session = await auth()
@@ -15,146 +12,199 @@ export default async function Dashboard() {
     redirect("/login")
   }
 
-  // Récupérer quelques statistiques pour le tableau de bord
-  const etablissementsCount = await prisma.etablissement.count()
-  const residentsCount = await prisma.resident.count()
-  const medicamentsCount = await prisma.medicament.count()
-  const prescriptionsCount = await prisma.prescription.count()
-
   const isAdmin = session.user?.email === "pharmaciemozart@gmail.com"
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <header className="px-6 py-4 border-b">
-        <div className="container flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Pharmacie Mozart</h1>
-          <div className="flex items-center gap-4">
-            <span className="text-sm">Connecté en tant que {session.user?.name || session.user?.email}</span>
-            <Link href="/api/auth/signout">
-              <Button variant="outline">Déconnexion</Button>
+    <div className="space-y-8">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h2 className="text-3xl font-bold text-primary">Bienvenue, {session.user?.name || "Pharmacien"}</h2>
+          <p className="text-muted-foreground mt-1">Gérez vos étiquettes PDA et vos prescriptions</p>
+        </div>
+
+        <div className="flex gap-3">
+          {isAdmin && (
+            <Link href="/dashboard/admin">
+              <Button variant="outline" className="border-primary/20 text-primary hover:bg-primary/5">
+                Administration
+              </Button>
             </Link>
-          </div>
+          )}
+          <Link href="/dashboard/etiquettes">
+            <Button className="bg-accent text-accent-foreground hover:bg-accent/90">
+              <PrinterIcon className="mr-2 h-4 w-4" />
+              Imprimer des étiquettes
+            </Button>
+          </Link>
         </div>
-      </header>
-      <main className="flex-1 p-6">
-        <div className="container">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-3xl font-bold">Tableau de bord</h2>
-            {isAdmin && (
-              <Link href="/dashboard/admin">
-                <Button>Administration</Button>
+      </div>
+
+      {/* Accès rapide */}
+      <section>
+        <h3 className="text-xl font-bold text-primary mb-4">Accès rapide</h3>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Link href="/dashboard/etiquettes" className="block">
+            <Card className="h-full hover:shadow-md transition-shadow border-accent/20 hover:border-accent">
+              <CardContent className="p-6 flex flex-col items-center text-center">
+                <div className="w-12 h-12 bg-accent/10 rounded-full flex items-center justify-center mb-3">
+                  <PrinterIcon className="h-6 w-6 text-accent" />
+                </div>
+                <h4 className="font-bold text-primary">Imprimer des étiquettes</h4>
+                <p className="text-sm text-muted-foreground mt-1">Générer des étiquettes PDA</p>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link href="/dashboard/prescriptions" className="block">
+            <Card className="h-full hover:shadow-md transition-shadow border-primary/20 hover:border-primary/30">
+              <CardContent className="p-6 flex flex-col items-center text-center">
+                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-3">
+                  <FileTextIcon className="h-6 w-6 text-primary" />
+                </div>
+                <h4 className="font-bold text-primary">Prescriptions</h4>
+                <p className="text-sm text-muted-foreground mt-1">Gérer les prescriptions</p>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link href="/dashboard/residents" className="block">
+            <Card className="h-full hover:shadow-md transition-shadow border-primary/20 hover:border-primary/30">
+              <CardContent className="p-6 flex flex-col items-center text-center">
+                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-3">
+                  <UsersIcon className="h-6 w-6 text-primary" />
+                </div>
+                <h4 className="font-bold text-primary">Résidents</h4>
+                <p className="text-sm text-muted-foreground mt-1">Gérer les résidents</p>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link href="/dashboard/etablissements" className="block">
+            <Card className="h-full hover:shadow-md transition-shadow border-primary/20 hover:border-primary/30">
+              <CardContent className="p-6 flex flex-col items-center text-center">
+                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-3">
+                  <HomeIcon className="h-6 w-6 text-primary" />
+                </div>
+                <h4 className="font-bold text-primary">Établissements</h4>
+                <p className="text-sm text-muted-foreground mt-1">Gérer les établissements</p>
+              </CardContent>
+            </Card>
+          </Link>
+        </div>
+      </section>
+
+      {/* Flux de travail */}
+      <section>
+        <h3 className="text-xl font-bold text-primary mb-4">Flux de travail</h3>
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex flex-col md:flex-row gap-8">
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold">
+                    1
+                  </div>
+                  <h4 className="font-bold text-primary">Sélectionner un établissement</h4>
+                </div>
+                <p className="text-muted-foreground ml-11">
+                  Choisissez l'établissement pour lequel vous souhaitez imprimer des étiquettes.
+                </p>
+              </div>
+
+              <div className="hidden md:block text-muted-foreground self-center">
+                <ArrowRightIcon className="h-6 w-6" />
+              </div>
+
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold">
+                    2
+                  </div>
+                  <h4 className="font-bold text-primary">Sélectionner les résidents</h4>
+                </div>
+                <p className="text-muted-foreground ml-11">
+                  Choisissez les résidents pour lesquels vous souhaitez imprimer des étiquettes.
+                </p>
+              </div>
+
+              <div className="hidden md:block text-muted-foreground self-center">
+                <ArrowRightIcon className="h-6 w-6" />
+              </div>
+
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-8 h-8 rounded-full bg-accent text-white flex items-center justify-center font-bold">
+                    3
+                  </div>
+                  <h4 className="font-bold text-primary">Imprimer les étiquettes</h4>
+                </div>
+                <p className="text-muted-foreground ml-11">
+                  Générez et imprimez les étiquettes PDA pour les prescriptions sélectionnées.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-8 text-center">
+              <Link href="/dashboard/etiquettes">
+                <Button className="bg-accent text-accent-foreground hover:bg-accent/90">
+                  <PrinterIcon className="mr-2 h-4 w-4" />
+                  Commencer l'impression
+                </Button>
               </Link>
-            )}
-          </div>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
 
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Établissements</CardTitle>
-                <HomeIcon className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{etablissementsCount}</div>
-                <p className="text-xs text-muted-foreground">Maisons de retraite enregistrées</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Résidents</CardTitle>
-                <UsersIcon className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{residentsCount}</div>
-                <p className="text-xs text-muted-foreground">Résidents enregistrés</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Médicaments</CardTitle>
-                <PillIcon className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{medicamentsCount}</div>
-                <p className="text-xs text-muted-foreground">Médicaments enregistrés</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Prescriptions</CardTitle>
-                <PrinterIcon className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{prescriptionsCount}</div>
-                <p className="text-xs text-muted-foreground">Prescriptions actives</p>
-              </CardContent>
-            </Card>
-          </div>
+      {/* Aide rapide */}
+      <section>
+        <h3 className="text-xl font-bold text-primary mb-4">Aide rapide</h3>
+        <Card>
+          <CardContent className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="flex flex-col">
+                <div className="flex items-center gap-3 mb-3">
+                  <ClipboardListIcon className="h-5 w-5 text-primary" />
+                  <h4 className="font-bold text-primary">Comment ajouter une prescription ?</h4>
+                </div>
+                <ol className="list-decimal ml-8 text-sm text-muted-foreground space-y-1">
+                  <li>Allez dans la section "Prescriptions"</li>
+                  <li>Cliquez sur "Nouvelle prescription"</li>
+                  <li>Remplissez les informations requises</li>
+                  <li>Cliquez sur "Créer la prescription"</li>
+                </ol>
+              </div>
 
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            <Card className="col-span-full lg:col-span-2">
-              <CardHeader>
-                <CardTitle>Gestion des étiquettes PDA</CardTitle>
-                <CardDescription>Gérez et imprimez les étiquettes PDA pour les maisons de retraite</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <Link href="/dashboard/etablissements">
-                    <Button variant="outline" className="w-full justify-start">
-                      <HomeIcon className="mr-2 h-4 w-4" />
-                      Gérer les établissements
-                    </Button>
-                  </Link>
-                  <Link href="/dashboard/residents">
-                    <Button variant="outline" className="w-full justify-start">
-                      <UsersIcon className="mr-2 h-4 w-4" />
-                      Gérer les résidents
-                    </Button>
-                  </Link>
-                  <Link href="/dashboard/medicaments">
-                    <Button variant="outline" className="w-full justify-start">
-                      <PillIcon className="mr-2 h-4 w-4" />
-                      Gérer les médicaments
-                    </Button>
-                  </Link>
-                  <Link href="/dashboard/prescriptions">
-                    <Button variant="outline" className="w-full justify-start">
-                      <PrinterIcon className="mr-2 h-4 w-4" />
-                      Gérer les prescriptions
-                    </Button>
-                  </Link>
+              <div className="flex flex-col">
+                <div className="flex items-center gap-3 mb-3">
+                  <ClipboardListIcon className="h-5 w-5 text-primary" />
+                  <h4 className="font-bold text-primary">Comment imprimer des étiquettes ?</h4>
                 </div>
-                <div className="mt-4">
-                  <Link href="/dashboard/etiquettes">
-                    <Button className="w-full">
-                      <PrinterIcon className="mr-2 h-4 w-4" />
-                      Imprimer les étiquettes PDA
-                    </Button>
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
+                <ol className="list-decimal ml-8 text-sm text-muted-foreground space-y-1">
+                  <li>Allez dans la section "Étiquettes PDA"</li>
+                  <li>Sélectionnez un établissement</li>
+                  <li>Sélectionnez les résidents</li>
+                  <li>Sélectionnez les prescriptions</li>
+                  <li>Cliquez sur "Imprimer les étiquettes"</li>
+                </ol>
+              </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Profil</CardTitle>
-                <CardDescription>Informations sur votre compte</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <p className="text-sm font-medium">Nom: {session.user?.name || "Non défini"}</p>
-                  <p className="text-sm font-medium">Email: {session.user?.email}</p>
-                  <p className="text-sm font-medium">Rôle: {isAdmin ? "Administrateur" : "Pharmacien"}</p>
+              <div className="flex flex-col">
+                <div className="flex items-center gap-3 mb-3">
+                  <ClipboardListIcon className="h-5 w-5 text-primary" />
+                  <h4 className="font-bold text-primary">Comment ajouter un résident ?</h4>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </main>
-      <footer className="py-6 border-t">
-        <div className="container flex flex-col items-center justify-center gap-2 md:flex-row md:justify-between">
-          <p className="text-sm text-gray-500">© 2025 Pharmacie Mozart. Tous droits réservés.</p>
-        </div>
-      </footer>
+                <ol className="list-decimal ml-8 text-sm text-muted-foreground space-y-1">
+                  <li>Allez dans la section "Résidents"</li>
+                  <li>Cliquez sur "Nouveau résident"</li>
+                  <li>Remplissez les informations requises</li>
+                  <li>Cliquez sur "Créer le résident"</li>
+                </ol>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
     </div>
   )
 }

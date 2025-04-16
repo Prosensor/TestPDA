@@ -44,72 +44,92 @@
 }
 
 :root {
+  /* Couleurs de base */
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --background: oklch(1 0 0); /* Blanc */
+  --foreground: oklch(0.145 0 0); /* Texte foncé */
+
+  /* Couleur primaire - Bleu #1a4b8b */
+  --primary: oklch(0.35 0.15 260);
+  --primary-foreground: oklch(0.985 0 0); /* Blanc */
+
+  /* Couleur d'accent - Vert #8cc63f */
+  --accent: oklch(0.8 0.2 130);
+  --accent-foreground: oklch(0.145 0 0); /* Texte foncé */
+
+  /* Autres couleurs */
+  --card: oklch(1 0 0); /* Blanc */
+  --card-foreground: oklch(0.145 0 0); /* Texte foncé */
+  --popover: oklch(1 0 0); /* Blanc */
+  --popover-foreground: oklch(0.145 0 0); /* Texte foncé */
+  --secondary: oklch(0.97 0 0); /* Gris très clair */
+  --secondary-foreground: oklch(0.205 0 0); /* Texte gris foncé */
+  --muted: oklch(0.97 0 0); /* Gris très clair */
+  --muted-foreground: oklch(0.556 0 0); /* Texte gris moyen */
+  --destructive: oklch(0.577 0.245 27.325); /* Rouge */
+  --border: oklch(0.922 0 0); /* Gris clair */
+  --input: oklch(0.922 0 0); /* Gris clair */
+  --ring: oklch(0.35 0.15 260); /* Bleu primaire */
+
+  /* Couleurs de graphiques */
+  --chart-1: oklch(0.35 0.15 260); /* Bleu primaire */
+  --chart-2: oklch(0.8 0.2 130); /* Vert accent */
+  --chart-3: oklch(0.6 0.118 184.704); /* Bleu clair */
+  --chart-4: oklch(0.828 0.189 84.429); /* Jaune */
+  --chart-5: oklch(0.769 0.188 70.08); /* Orange */
+
+  /* Couleurs de la sidebar */
+  --sidebar: oklch(0.35 0.15 260); /* Bleu primaire */
+  --sidebar-foreground: oklch(0.985 0 0); /* Blanc */
+  --sidebar-primary: oklch(0.8 0.2 130); /* Vert accent */
+  --sidebar-primary-foreground: oklch(0.145 0 0); /* Texte foncé */
+  --sidebar-accent: oklch(0.3 0.1 260); /* Bleu plus foncé */
+  --sidebar-accent-foreground: oklch(0.985 0 0); /* Blanc */
+  --sidebar-border: oklch(0.3 0.05 260); /* Bleu encore plus foncé */
+  --sidebar-ring: oklch(0.8 0.2 130); /* Vert accent */
 }
 
 .dark {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
+
+  /* Couleur primaire - Bleu #1a4b8b mais plus lumineux pour le mode sombre */
+  --primary: oklch(0.5 0.15 260);
+  --primary-foreground: oklch(0.985 0 0);
+
+  /* Couleur d'accent - Vert #8cc63f mais plus lumineux pour le mode sombre */
+  --accent: oklch(0.85 0.2 130);
+  --accent-foreground: oklch(0.145 0 0);
+
   --card: oklch(0.205 0 0);
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
   --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
+  --ring: oklch(0.5 0.15 260);
+
+  /* Couleurs de graphiques */
+  --chart-1: oklch(0.5 0.15 260);
+  --chart-2: oklch(0.85 0.2 130);
+  --chart-3: oklch(0.696 0.17 162.48);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
+
+  /* Couleurs de la sidebar */
+  --sidebar: oklch(0.25 0.1 260);
   --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-primary: oklch(0.85 0.2 130);
+  --sidebar-primary-foreground: oklch(0.145 0 0);
+  --sidebar-accent: oklch(0.3 0.15 260);
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --sidebar-ring: oklch(0.85 0.2 130);
 }
 
 @layer base {
@@ -143,4 +163,86 @@
   .page-break-after {
     page-break-after: always;
   }
+}
+
+/* Styles personnalisés pour une meilleure UX */
+.btn-primary {
+  @apply bg-primary text-primary-foreground hover:bg-primary/90 transition-colors;
+}
+
+.btn-accent {
+  @apply bg-accent text-accent-foreground hover:bg-accent/90 transition-colors;
+}
+
+.card-hover {
+  @apply transition-all duration-200 hover:shadow-md hover:border-primary/30;
+}
+
+/* Navigation */
+.nav-link {
+  @apply flex items-center gap-3 px-4 py-3 rounded-lg text-sidebar-foreground/90 hover:bg-sidebar-accent transition-colors;
+}
+
+.nav-link-active {
+  @apply bg-sidebar-accent text-sidebar-foreground font-medium;
+}
+
+/* Styles pour les pharmaciens */
+.pharma-card {
+  @apply p-6 rounded-xl border border-border bg-card shadow-sm;
+}
+
+.pharma-section-title {
+  @apply text-xl font-bold text-primary mb-4;
+}
+
+.pharma-label {
+  @apply text-sm font-medium text-foreground/80 mb-1.5;
+}
+
+.pharma-input {
+  @apply px-4 py-2.5 rounded-lg border border-input bg-background focus:border-primary focus:ring-1 focus:ring-primary;
+}
+
+.pharma-button-primary {
+  @apply px-5 py-2.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors font-medium;
+}
+
+.pharma-button-accent {
+  @apply px-5 py-2.5 rounded-lg bg-accent text-accent-foreground hover:bg-accent/90 transition-colors font-medium;
+}
+
+.pharma-button-outline {
+  @apply px-5 py-2.5 rounded-lg border border-input bg-background hover:bg-muted transition-colors font-medium;
+}
+
+/* Styles pour les étiquettes */
+.etiquette-preview {
+  @apply border rounded-lg overflow-hidden bg-white shadow-sm;
+  width: 210mm;
+  height: 105mm;
+}
+
+.etiquette-medicament {
+  @apply text-3xl font-bold text-primary;
+}
+
+.etiquette-etablissement {
+  @apply text-xl font-bold text-accent;
+}
+
+.etiquette-patient {
+  @apply text-xl font-bold text-primary;
+}
+
+.etiquette-posologie {
+  @apply text-xl font-bold text-accent mt-2;
+}
+
+.etiquette-moment {
+  @apply text-xl font-bold text-primary;
+}
+
+.etiquette-info {
+  @apply text-base text-foreground/70;
 }

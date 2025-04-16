@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -12,7 +12,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import Link from "next/link"
-import { ArrowLeftIcon } from "lucide-react"
+import { ArrowLeftIcon, FileText, User, Building, Pill, SaveIcon, AlertCircle, InfoIcon } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { DatePicker } from "@/components/ui/date-picker"
 
 type Etablissement = {
@@ -24,6 +25,8 @@ type Resident = {
   id: string
   nom: string
   prenom: string
+  chambre: string
+  etage: string
 }
 
 type Medicament = {
@@ -33,15 +36,18 @@ type Medicament = {
 
 export default function NouvellePrescriptionPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const preselectedResidentId = searchParams.get("resident")
+  const preselectedMedicamentId = searchParams.get("medicament")
+  const preselectedEtablissementId = searchParams.get("etablissement")
+
   const [etablissements, setEtablissements] = useState<Etablissement[]>([])
-  const [etablissementId, setEtablissementId] = useState("")
+  const [etablissementId, setEtablissementId] = useState(preselectedEtablissementId || "")
   const [residents, setResidents] = useState<Resident[]>([])
-  const [residentId, setResidentId] = useState("")
+  const [residentId, setResidentId] = useState(preselectedResidentId || "")
   const [medicaments, setMedicaments] = useState<Medicament[]>([])
-  const [medicamentId, setMedicamentId] = useState("")
+  const [medicamentId, setMedicamentId] = useState(preselectedMedicamentId || "")
   const [posologie, setPosologie] = useState("")
-  const [frequence, setFrequence] = useState("1")
-  // Nouveaux états pour les moments de prise
   const [matin, setMatin] = useState(false)
   const [midi, setMidi] = useState(false)
   const [soir, setSoir] = useState(false)
@@ -65,6 +71,27 @@ export default function NouvellePrescriptionPage() {
       setResidentId("")
     }
   }, [etablissementId])
+
+  // Si on a un résident présélectionné, on récupère son établissement
+  useEffect(() => {
+    const fetchResidentDetails = async () => {
+      if (preselectedResidentId && !preselectedEtablissementId) {
+        try {
+          const response = await fetch(`/api/residents/${preselectedResidentId}`)
+          if (!response.ok) throw new Error("Erreur lors de la récupération du résident")
+          const data = await response.json()
+
+          if (data.resident && data.resident.etablissementId) {
+            setEtablissementId(data.resident.etablissementId)
+          }
+        } catch (error) {
+          console.error("Erreur:", error)
+        }
+      }
+    }
+
+    fetchResidentDetails()
+  }, [preselectedResidentId, preselectedEtablissementId])
 
   const fetchEtablissements = async () => {
     try {
@@ -120,23 +147,6 @@ export default function NouvellePrescriptionPage() {
       const calculatedFrequence =
         (matin ? 1 : 0) + (midi ? 1 : 0) + (soir ? 1 : 0) + (coucher ? 1 : 0) + (autreHoraire ? 1 : 0)
 
-      // Si aucun moment n'est sélectionné mais qu'une fréquence est spécifiée, utiliser celle-ci
-      const finalFrequence = calculatedFrequence > 0 ? calculatedFrequence : Number.parseInt(frequence)
-
-      console.log("Envoi des données:", {
-        residentId,
-        medicamentId,
-        posologie,
-        matin,
-        midi,
-        soir,
-        coucher,
-        autreHoraire,
-        frequence: finalFrequence,
-        dateDebut: formattedDateDebut,
-        dateFin: formattedDateFin,
-      })
-
       const response = await fetch("/api/prescriptions", {
         method: "POST",
         headers: {
@@ -150,8 +160,8 @@ export default function NouvellePrescriptionPage() {
           midi,
           soir,
           coucher,
-          autreHoraire,
-          frequence: finalFrequence,
+          autreHoraire: autreHoraire || null,
+          frequence: calculatedFrequence,
           dateDebut: formattedDateDebut,
           dateFin: formattedDateFin,
         }),
@@ -182,28 +192,53 @@ export default function NouvellePrescriptionPage() {
   }
 
   return (
-    <div className="p-6">
-      <div className="flex items-center mb-6">
-        <Link href="/dashboard/prescriptions" className="mr-4">
-          <Button variant="outline" size="icon">
+    <div className="space-y-8">
+      {/* En-tête */}
+      <div className="flex items-center gap-4">
+        <Link href="/dashboard/prescriptions">
+          <Button
+            variant="outline"
+            size="icon"
+            className="rounded-full border-primary/20 hover:bg-primary/5 hover:text-primary hover:border-primary/30"
+          >
             <ArrowLeftIcon className="h-4 w-4" />
           </Button>
         </Link>
-        <h2 className="text-3xl font-bold">Nouvelle prescription</h2>
+        <h2 className="text-3xl font-bold text-primary">Nouvelle prescription</h2>
       </div>
 
-      <Card className="max-w-2xl mx-auto">
-        <CardHeader>
-          <CardTitle>Informations de la prescription</CardTitle>
-          <CardDescription>Ajoutez une nouvelle prescription pour un résident</CardDescription>
+      {/* Formulaire */}
+      <Card className="max-w-3xl mx-auto border-primary/20 shadow-sm">
+        <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent pb-4">
+          <div className="flex items-center gap-3">
+            <div className="bg-primary/10 p-2 rounded-full">
+              <FileText className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <CardTitle className="text-primary">Informations de la prescription</CardTitle>
+              <CardDescription>Ajoutez une nouvelle prescription pour un résident</CardDescription>
+            </div>
+          </div>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <CardContent className="p-6">
+          {error && (
+            <Alert variant="destructive" className="mb-6">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="etablissement">Établissement *</Label>
+              <Label htmlFor="etablissement" className="text-primary font-medium">
+                Établissement *
+              </Label>
               <Select value={etablissementId} onValueChange={setEtablissementId} required>
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un établissement" />
+                <SelectTrigger className="border-primary/20 focus:ring-primary/20">
+                  <div className="flex items-center gap-2">
+                    <Building className="h-4 w-4 text-muted-foreground" />
+                    <SelectValue placeholder="Sélectionner un établissement" />
+                  </div>
                 </SelectTrigger>
                 <SelectContent>
                   {etablissements.map((etablissement) => (
@@ -216,15 +251,20 @@ export default function NouvellePrescriptionPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="resident">Résident *</Label>
+              <Label htmlFor="resident" className="text-primary font-medium">
+                Résident *
+              </Label>
               <Select value={residentId} onValueChange={setResidentId} required disabled={!etablissementId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un résident" />
+                <SelectTrigger className="border-primary/20 focus:ring-primary/20">
+                  <div className="flex items-center gap-2">
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    <SelectValue placeholder="Sélectionner un résident" />
+                  </div>
                 </SelectTrigger>
                 <SelectContent>
                   {residents.map((resident) => (
                     <SelectItem key={resident.id} value={resident.id}>
-                      {resident.nom} {resident.prenom}
+                      {resident.nom} {resident.prenom} - Chambre {resident.chambre}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -232,7 +272,10 @@ export default function NouvellePrescriptionPage() {
               {etablissementId && residents.length === 0 && (
                 <p className="text-sm text-muted-foreground mt-1">
                   Aucun résident disponible pour cet établissement.{" "}
-                  <Link href="/dashboard/residents/nouveau" className="text-primary hover:underline">
+                  <Link
+                    href={`/dashboard/residents/nouveau?etablissement=${etablissementId}`}
+                    className="text-primary hover:underline"
+                  >
                     Ajouter un résident
                   </Link>
                 </p>
@@ -240,10 +283,15 @@ export default function NouvellePrescriptionPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="medicament">Médicament *</Label>
+              <Label htmlFor="medicament" className="text-primary font-medium">
+                Médicament *
+              </Label>
               <Select value={medicamentId} onValueChange={setMedicamentId} required>
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un médicament" />
+                <SelectTrigger className="border-primary/20 focus:ring-primary/20">
+                  <div className="flex items-center gap-2">
+                    <Pill className="h-4 w-4 text-muted-foreground" />
+                    <SelectValue placeholder="Sélectionner un médicament" />
+                  </div>
                 </SelectTrigger>
                 <SelectContent>
                   {medicaments.map((medicament) => (
@@ -264,21 +312,29 @@ export default function NouvellePrescriptionPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="posologie">Posologie *</Label>
+              <Label htmlFor="posologie" className="text-primary font-medium">
+                Posologie *
+              </Label>
               <Textarea
                 id="posologie"
                 value={posologie}
                 onChange={(e) => setPosologie(e.target.value)}
-                placeholder="Ex: 1 cuillère à soupe"
+                placeholder="Ex: 1 comprimé"
+                className="border-primary/20 focus:border-primary focus:ring-1 focus:ring-primary"
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <Label>Moment de prise *</Label>
+              <Label className="text-primary font-medium">Moment de prise *</Label>
               <div className="flex flex-wrap gap-4 mt-2">
                 <div className="flex items-center space-x-2">
-                  <Checkbox id="matin" checked={matin} onCheckedChange={(checked) => setMatin(checked === true)} />
+                  <Checkbox
+                    id="matin"
+                    checked={matin}
+                    onCheckedChange={(checked) => setMatin(checked === true)}
+                    className="border-primary/30 data-[state=checked]:bg-primary data-[state=checked]:text-white"
+                  />
                   <label
                     htmlFor="matin"
                     className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
@@ -287,7 +343,12 @@ export default function NouvellePrescriptionPage() {
                   </label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Checkbox id="midi" checked={midi} onCheckedChange={(checked) => setMidi(checked === true)} />
+                  <Checkbox
+                    id="midi"
+                    checked={midi}
+                    onCheckedChange={(checked) => setMidi(checked === true)}
+                    className="border-primary/30 data-[state=checked]:bg-primary data-[state=checked]:text-white"
+                  />
                   <label
                     htmlFor="midi"
                     className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
@@ -296,7 +357,12 @@ export default function NouvellePrescriptionPage() {
                   </label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Checkbox id="soir" checked={soir} onCheckedChange={(checked) => setSoir(checked === true)} />
+                  <Checkbox
+                    id="soir"
+                    checked={soir}
+                    onCheckedChange={(checked) => setSoir(checked === true)}
+                    className="border-primary/30 data-[state=checked]:bg-primary data-[state=checked]:text-white"
+                  />
                   <label
                     htmlFor="soir"
                     className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
@@ -309,6 +375,7 @@ export default function NouvellePrescriptionPage() {
                     id="coucher"
                     checked={coucher}
                     onCheckedChange={(checked) => setCoucher(checked === true)}
+                    className="border-primary/30 data-[state=checked]:bg-primary data-[state=checked]:text-white"
                   />
                   <label
                     htmlFor="coucher"
@@ -325,34 +392,109 @@ export default function NouvellePrescriptionPage() {
                   value={autreHoraire}
                   onChange={(e) => setAutreHoraire(e.target.value)}
                   placeholder="Ex: 10h, 14h, etc."
-                  className="mt-1"
+                  className="mt-1 border-primary/20 focus:border-primary focus:ring-1 focus:ring-primary"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="dateDebut">Date de début *</Label>
+                <Label htmlFor="dateDebut" className="text-primary font-medium">
+                  Date de début *
+                </Label>
                 <DatePicker date={dateDebut} setDate={setDateDebut} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="dateFin">Date de fin (optionnel)</Label>
+                <Label htmlFor="dateFin" className="text-primary font-medium">
+                  Date de fin (optionnel)
+                </Label>
                 <DatePicker date={dateFin} setDate={setDateFin} />
               </div>
             </div>
 
             {error && <p className="text-sm font-medium text-red-500">{error}</p>}
-            <div className="flex justify-end gap-2">
+            <div className="flex justify-end gap-3 pt-4">
               <Link href="/dashboard/prescriptions">
-                <Button variant="outline" type="button">
+                <Button
+                  variant="outline"
+                  type="button"
+                  className="border-primary/20 text-primary hover:bg-primary/5 hover:border-primary/30"
+                >
                   Annuler
                 </Button>
               </Link>
-              <Button type="submit" disabled={isLoading || !residentId || !medicamentId || !posologie || !dateDebut}>
-                {isLoading ? "Création en cours..." : "Créer la prescription"}
+              <Button
+                type="submit"
+                disabled={isLoading || !residentId || !medicamentId || !posologie || !dateDebut}
+                className="bg-accent text-accent-foreground hover:bg-accent/90"
+              >
+                {isLoading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-accent-foreground border-t-transparent rounded-full animate-spin mr-2"></div>
+                    Création en cours...
+                  </>
+                ) : (
+                  <>
+                    <SaveIcon className="mr-2 h-4 w-4" />
+                    Créer la prescription
+                  </>
+                )}
               </Button>
             </div>
           </form>
+        </CardContent>
+      </Card>
+
+      {/* Guide */}
+      <Card className="max-w-3xl mx-auto bg-primary/5 border-primary/20">
+        <CardHeader>
+          <CardTitle className="text-primary text-lg">Informations importantes</CardTitle>
+        </CardHeader>
+        <CardContent className="p-6">
+          <Alert className="bg-accent/10 border-accent/20 mb-4">
+            <InfoIcon className="h-4 w-4 text-accent" />
+            <AlertDescription className="text-accent-foreground">
+              Les prescriptions créées seront disponibles pour l'impression d'étiquettes PDA.
+            </AlertDescription>
+          </Alert>
+
+          <div className="space-y-4">
+            <div className="flex gap-3">
+              <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold flex-shrink-0">
+                1
+              </div>
+              <div>
+                <h4 className="font-bold text-primary">Posologie précise</h4>
+                <p className="text-sm text-muted-foreground">
+                  Indiquez la posologie exacte (ex: "1 comprimé", "5ml") pour éviter toute confusion.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold flex-shrink-0">
+                2
+              </div>
+              <div>
+                <h4 className="font-bold text-primary">Moments de prise</h4>
+                <p className="text-sm text-muted-foreground">
+                  Sélectionnez au moins un moment de prise ou spécifiez un horaire particulier.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold flex-shrink-0">
+                3
+              </div>
+              <div>
+                <h4 className="font-bold text-primary">Dates</h4>
+                <p className="text-sm text-muted-foreground">
+                  La date de début est obligatoire. La date de fin est optionnelle pour les traitements continus.
+                </p>
+              </div>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>

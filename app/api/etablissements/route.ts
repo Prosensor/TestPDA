@@ -39,6 +39,8 @@ export async function POST(request: Request) {
   }
 }
 
+// Ajoutons des logs pour voir les établissements récupérés
+
 export async function GET() {
   try {
     // Vérifier si l'utilisateur est authentifié
@@ -60,6 +62,9 @@ export async function GET() {
         },
       },
     })
+
+    console.log("Établissements trouvés:", etablissements.length)
+    console.log("Premier établissement (si disponible):", etablissements[0] || "Aucun")
 
     return NextResponse.json({ etablissements }, { status: 200 })
   } catch (error) {
