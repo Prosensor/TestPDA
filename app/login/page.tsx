@@ -1,8 +1,8 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect, Suspense } from "react"
-import { signIn, useSession } from "next-auth/react"
+import { useState, useEffect } from "react"
+import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -14,7 +14,6 @@ import { ExclamationTriangleIcon } from "@radix-ui/react-icons"
 // Composant pour gérer les paramètres de recherche
 function LoginForm() {
   const router = useRouter()
-  const { data: session } = useSession()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
@@ -40,12 +39,8 @@ function LoginForm() {
     }
   }, [])
 
-  // Rediriger si déjà connecté
-  useEffect(() => {
-    if (session) {
-      router.push("/dashboard")
-    }
-  }, [session, router])
+  // Nous n'utilisons plus useSession ici pour éviter l'erreur
+  // La redirection après connexion sera gérée par signIn
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -143,11 +138,7 @@ function LoginForm() {
   )
 }
 
-// Page de connexion avec Suspense
+// Page de connexion
 export default function LoginPage() {
-  return (
-    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Chargement...</div>}>
-      <LoginForm />
-    </Suspense>
-  )
+  return <LoginForm />
 }

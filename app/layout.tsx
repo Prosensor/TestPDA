@@ -1,26 +1,24 @@
 import type React from "react"
-import "./globals.css"
-import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import { Providers } from "./providers"
+import ClientLayout from "./ClientLayout"
 
 const inter = Inter({ subsets: ["latin"] })
 
-export const metadata: Metadata = {
-  title: "Pharmacie Mozart",
-  description: "Portail sécurisé de la Pharmacie Mozart",
+export const metadata = {
+  title: "Pharmacie Mozart - Maizière-lès-Metz",
+  description:
+    "Votre pharmacie de confiance à Maizière-lès-Metz. Services pharmaceutiques, conseils santé et bien-être.",
 }
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode
-}) {
+}>) {
   return (
-    <html lang="fr" suppressHydrationWarning>
-      <body className={inter.className}>
-        <Providers>{children}</Providers>
-      </body>
-    </html>
+    <Providers>
+      <ClientLayout>{children}</ClientLayout>
+    </Providers>
   )
 }
