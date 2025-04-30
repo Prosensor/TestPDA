@@ -51,7 +51,7 @@ export default function Home() {
       <section className="relative min-h-screen flex flex-col justify-center overflow-hidden">
         {/* Background Elements */}
         <div className="absolute inset-0 -z-10">
-          <div className="absolute inset-0 bg-gradient-to-br from-white via-[#f8fafc] to-[#f0f9ff]" />
+          <div className="absolute inset-0" />
 
           {/* Decorative circles */}
           <motion.div

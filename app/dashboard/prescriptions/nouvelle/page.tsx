@@ -57,6 +57,7 @@ export default function NouvellePrescriptionPage() {
   const [dateFin, setDateFin] = useState<Date | undefined>(undefined)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+  const [isLoadingResidents, setIsLoadingResidents] = useState(false)
 
   useEffect(() => {
     fetchEtablissements()
@@ -98,20 +99,37 @@ export default function NouvellePrescriptionPage() {
       const response = await fetch("/api/etablissements")
       if (!response.ok) throw new Error("Erreur lors de la récupération des établissements")
       const data = await response.json()
-      setEtablissements(data.etablissements)
+      setEtablissements(data.etablissements || [])
     } catch (error) {
       console.error("Erreur:", error)
+      setEtablissements([])
     }
   }
 
   const fetchResidents = async (etablissementId: string) => {
+    setIsLoadingResidents(true)
     try {
+      console.log(`Récupération des résidents pour l'établissement: ${etablissementId}`)
       const response = await fetch(`/api/etablissements/${etablissementId}/residents`)
-      if (!response.ok) throw new Error("Erreur lors de la récupération des résidents")
+
+      if (!response.ok) {
+        throw new Error(`Erreur lors de la récupération des résidents: ${response.status}`)
+      }
+
       const data = await response.json()
-      setResidents(data.residents)
+      console.log("Données des résidents reçues:", data)
+
+      if (data && Array.isArray(data.residents)) {
+        setResidents(data.residents)
+      } else {
+        console.error("Format de données invalide:", data)
+        setResidents([])
+      }
     } catch (error) {
-      console.error("Erreur:", error)
+      console.error("Erreur lors de la récupération des résidents:", error)
+      setResidents([])
+    } finally {
+      setIsLoadingResidents(false)
     }
   }
 
@@ -120,9 +138,10 @@ export default function NouvellePrescriptionPage() {
       const response = await fetch("/api/medicaments")
       if (!response.ok) throw new Error("Erreur lors de la récupération des médicaments")
       const data = await response.json()
-      setMedicaments(data.medicaments)
+      setMedicaments(data.medicaments || [])
     } catch (error) {
       console.error("Erreur:", error)
+      setMedicaments([])
     }
   }
 
@@ -241,11 +260,17 @@ export default function NouvellePrescriptionPage() {
                   </div>
                 </SelectTrigger>
                 <SelectContent>
-                  {etablissements.map((etablissement) => (
-                    <SelectItem key={etablissement.id} value={etablissement.id}>
-                      {etablissement.nom}
+                  {etablissements && etablissements.length > 0 ? (
+                    etablissements.map((etablissement) => (
+                      <SelectItem key={etablissement.id} value={etablissement.id}>
+                        {etablissement.nom}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="loading" disabled>
+                      Aucun établissement disponible
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -254,22 +279,37 @@ export default function NouvellePrescriptionPage() {
               <Label htmlFor="resident" className="text-primary font-medium">
                 Résident *
               </Label>
-              <Select value={residentId} onValueChange={setResidentId} required disabled={!etablissementId}>
+              <Select
+                value={residentId}
+                onValueChange={setResidentId}
+                required
+                disabled={!etablissementId || isLoadingResidents}
+              >
                 <SelectTrigger className="border-primary/20 focus:ring-primary/20">
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4 text-muted-foreground" />
-                    <SelectValue placeholder="Sélectionner un résident" />
+                    <SelectValue placeholder={isLoadingResidents ? "Chargement..." : "Sélectionner un résident"} />
                   </div>
                 </SelectTrigger>
                 <SelectContent>
-                  {residents.map((resident) => (
-                    <SelectItem key={resident.id} value={resident.id}>
-                      {resident.nom} {resident.prenom} - Chambre {resident.chambre}
+                  {isLoadingResidents ? (
+                    <SelectItem value="loading" disabled>
+                      Chargement des résidents...
                     </SelectItem>
-                  ))}
+                  ) : residents && residents.length > 0 ? (
+                    residents.map((resident) => (
+                      <SelectItem key={resident.id} value={resident.id}>
+                        {resident.nom} {resident.prenom} - Chambre {resident.chambre}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="empty" disabled>
+                      Aucun résident disponible
+                    </SelectItem>
+                  )}
                 </SelectContent>
               </Select>
-              {etablissementId && residents.length === 0 && (
+              {etablissementId && !isLoadingResidents && (!residents || residents.length === 0) && (
                 <p className="text-sm text-muted-foreground mt-1">
                   Aucun résident disponible pour cet établissement.{" "}
                   <Link
@@ -294,14 +334,20 @@ export default function NouvellePrescriptionPage() {
                   </div>
                 </SelectTrigger>
                 <SelectContent>
-                  {medicaments.map((medicament) => (
-                    <SelectItem key={medicament.id} value={medicament.id}>
-                      {medicament.nom}
+                  {medicaments && medicaments.length > 0 ? (
+                    medicaments.map((medicament) => (
+                      <SelectItem key={medicament.id} value={medicament.id}>
+                        {medicament.nom}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="loading" disabled>
+                      Aucun médicament disponible
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
-              {medicaments.length === 0 && (
+              {(!medicaments || medicaments.length === 0) && (
                 <p className="text-sm text-muted-foreground mt-1">
                   Aucun médicament disponible.{" "}
                   <Link href="/dashboard/medicaments/nouveau" className="text-primary hover:underline">

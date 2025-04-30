@@ -20,12 +20,15 @@ import {
   RefreshCwIcon,
   FileDownIcon,
   XCircleIcon,
+  InfoIcon,
+  PlusCircle,
 } from "lucide-react"
 import Link from "next/link"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 type Etablissement = {
   id: string
@@ -85,6 +88,7 @@ export default function EtiquettesPage() {
   const [searchPrescription, setSearchPrescription] = useState("")
   const [activeTab, setActiveTab] = useState("selection")
   const [generatingPDF, setGeneratingPDF] = useState(false)
+  const [debugInfo, setDebugInfo] = useState<string | null>(null)
 
   useEffect(() => {
     fetchEtablissements()
@@ -303,26 +307,53 @@ export default function EtiquettesPage() {
     try {
       setLoadingPrescriptions(true)
       setError(null)
+      setDebugInfo(null)
       console.log("Récupération des prescriptions pour les résidents:", residentIds)
 
       const response = await fetch("/api/prescriptions/filter", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          Pragma: "no-cache",
+          Expires: "0",
         },
         body: JSON.stringify({ residentIds }),
       })
 
       console.log("Statut de la réponse:", response.status, response.statusText)
 
-      if (!response.ok) throw new Error("Erreur lors de la récupération des prescriptions")
+      if (!response.ok) {
+        console.error("Erreur HTTP:", response.status, response.statusText)
+        try {
+          const errorData = await response.json()
+          console.error("Détails de l'erreur:", errorData)
+          throw new Error(
+            `Erreur lors de la récupération des prescriptions: ${response.status} ${response.statusText} - ${JSON.stringify(errorData)}`,
+          )
+        } catch (parseError) {
+          throw new Error(`Erreur lors de la récupération des prescriptions: ${response.status} ${response.statusText}`)
+        }
+      }
 
       const data = await response.json()
       console.log("Données reçues de l'API pour les prescriptions:", data)
 
+      // Afficher des informations de débogage
+      const debugMessage = `Résidents sélectionnés: ${residentIds.length}, Prescriptions trouvées: ${data?.prescriptions?.length || 0}`
+      setDebugInfo(debugMessage)
+
       if (data && data.prescriptions && Array.isArray(data.prescriptions)) {
+        console.log(`${data.prescriptions.length} prescriptions trouvées`)
         setPrescriptions(data.prescriptions)
         setFilteredPrescriptions(data.prescriptions)
+
+        // Si aucune prescription n'est trouvée, afficher un message d'information
+        if (data.prescriptions.length === 0) {
+          setError(
+            "Aucune prescription trouvée pour les résidents sélectionnés. Assurez-vous d'avoir créé des prescriptions pour ces résidents.",
+          )
+        }
       } else {
         console.error("Format de données inattendu pour les prescriptions:", data)
 
@@ -344,22 +375,39 @@ export default function EtiquettesPage() {
           console.log("Utilisation des prescriptions trouvées:", foundPrescriptions)
           setPrescriptions(foundPrescriptions)
           setFilteredPrescriptions(foundPrescriptions)
+
+          // Si aucune prescription n'est trouvée, afficher un message d'information
+          if (foundPrescriptions.length === 0) {
+            setError(
+              "Aucune prescription trouvée pour les résidents sélectionnés. Assurez-vous d'avoir créé des prescriptions pour ces résidents.",
+            )
+          }
         } else {
           // Si aucun tableau n'est trouvé, essayer de récupérer les prescriptions directement
           if (Array.isArray(data)) {
             console.log("Les données sont directement un tableau:", data)
             setPrescriptions(data)
             setFilteredPrescriptions(data)
+
+            // Si aucune prescription n'est trouvée, afficher un message d'information
+            if (data.length === 0) {
+              setError(
+                "Aucune prescription trouvée pour les résidents sélectionnés. Assurez-vous d'avoir créé des prescriptions pour ces résidents.",
+              )
+            }
           } else {
             console.error("Impossible de trouver des prescriptions dans les données")
             setPrescriptions([])
             setFilteredPrescriptions([])
+            setError("Format de données inattendu. Veuillez contacter l'administrateur.")
           }
         }
       }
     } catch (error) {
       console.error("Erreur:", error)
-      setError("Impossible de charger les prescriptions. Veuillez réessayer.")
+      setError(`Impossible de charger les prescriptions: ${error instanceof Error ? error.message : String(error)}`)
+      setPrescriptions([])
+      setFilteredPrescriptions([])
     } finally {
       setLoadingPrescriptions(false)
     }
@@ -486,6 +534,26 @@ export default function EtiquettesPage() {
     return moments.length > 0 ? moments.join(", ") : `${prescription.frequence}x/jour`
   }
 
+  // Fonction pour vérifier si une prescription est active (non expirée)
+  const isPrescriptionActive = (prescription: Prescription) => {
+    if (!prescription.dateFin) return true
+    const today = new Date()
+    const endDate = new Date(prescription.dateFin)
+    return endDate >= today
+  }
+
+  // Fonction pour créer une nouvelle prescription
+  const handleCreatePrescription = () => {
+    if (selectedResidents.length === 0) {
+      setError("Veuillez sélectionner au moins un résident pour créer une prescription")
+      return
+    }
+
+    // Rediriger vers la page de création de prescription avec le premier résident sélectionné
+    const residentId = selectedResidents[0]
+    window.location.href = `/dashboard/prescriptions/nouvelle?residentId=${residentId}`
+  }
+
   return (
     <div className="space-y-6">
       {/* En-tête */}
@@ -553,6 +621,15 @@ export default function EtiquettesPage() {
           <CheckIcon className="h-5 w-5 flex-shrink-0" />
           <p>{success}</p>
         </div>
+      )}
+
+      {/* Informations de débogage */}
+      {debugInfo && (
+        <Alert className="bg-blue-50 border-blue-200">
+          <InfoIcon className="h-4 w-4" />
+          <AlertTitle>Informations de débogage</AlertTitle>
+          <AlertDescription>{debugInfo}</AlertDescription>
+        </Alert>
       )}
 
       {/* Onglets principaux */}
@@ -759,7 +836,9 @@ export default function EtiquettesPage() {
                             filteredPrescriptions.map((prescription) => (
                               <div
                                 key={prescription.id}
-                                className="flex items-start space-x-2 py-2 px-2 rounded-md hover:bg-muted/50 transition-colors"
+                                className={`flex items-start space-x-2 py-2 px-2 rounded-md hover:bg-muted/50 transition-colors ${
+                                  !isPrescriptionActive(prescription) ? "opacity-60" : ""
+                                }`}
                               >
                                 <Checkbox
                                   id={`prescription-${prescription.id}`}
@@ -803,6 +882,11 @@ export default function EtiquettesPage() {
                                         </Badge>
                                       )}
                                     </div>
+                                    {!isPrescriptionActive(prescription) && (
+                                      <span className="text-xs text-destructive mt-1">
+                                        Prescription expirée ({formatDate(prescription.dateFin || "")})
+                                      </span>
+                                    )}
                                   </div>
                                 </Label>
                               </div>
@@ -825,7 +909,17 @@ export default function EtiquettesPage() {
                 ) : selectedResidents.length > 0 ? (
                   <div className="flex flex-col items-center justify-center h-40 text-center">
                     <AlertCircleIcon className="h-8 w-8 text-muted-foreground mb-2" />
-                    <p className="text-muted-foreground">Aucune prescription trouvée pour les résidents sélectionnés</p>
+                    <p className="text-muted-foreground mb-4">
+                      Aucune prescription trouvée pour les résidents sélectionnés
+                    </p>
+                    <Button
+                      variant="outline"
+                      onClick={handleCreatePrescription}
+                      className="border-accent text-accent hover:bg-accent hover:text-white"
+                    >
+                      <PlusCircle className="h-4 w-4 mr-2" />
+                      Créer une prescription
+                    </Button>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center h-40 text-center">
