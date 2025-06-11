@@ -12,7 +12,6 @@ import {
   Menu,
   Home,
   Stethoscope,
-  ShoppingBag,
   Info,
   X,
   LayoutDashboard,
@@ -143,23 +142,6 @@ export default function ClientLayout({
                       </Link>
 
                       <Link
-                        href="/products"
-                        className={`px-4 py-2 rounded-md font-medium transition-colors relative group ${
-                          isActive("/products")
-                            ? "text-[#1a4b8b] bg-[#1a4b8b]/5"
-                            : "text-gray-700 hover:text-[#1a4b8b] hover:bg-[#1a4b8b]/5"
-                        }`}
-                      >
-                        <span className="flex items-center gap-1.5">
-                          <ShoppingBag className="h-4 w-4" />
-                          Produits
-                        </span>
-                        {isActive("/products") && (
-                          <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#1a4b8b] rounded-full"></span>
-                        )}
-                      </Link>
-
-                      <Link
                         href="/about"
                         className={`px-4 py-2 rounded-md font-medium transition-colors relative group ${
                           isActive("/about")
@@ -275,14 +257,6 @@ export default function ClientLayout({
                       <span className="text-lg">Services</span>
                     </Link>
                     <Link
-                      href="/products"
-                      className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-[#1a4b8b]/10 transition-colors"
-                      onClick={closeMenu}
-                    >
-                      <ShoppingBag className="h-5 w-5 text-[#1a4b8b]" />
-                      <span className="text-lg">Produits</span>
-                    </Link>
-                    <Link
                       href="/about"
                       className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-[#1a4b8b]/10 transition-colors"
                       onClick={closeMenu}
@@ -366,11 +340,6 @@ export default function ClientLayout({
                         <li>
                           <Link href="/services" className="hover:text-[#1a4b8b] transition-colors">
                             Services
-                          </Link>
-                        </li>
-                        <li>
-                          <Link href="/products" className="hover:text-[#1a4b8b] transition-colors">
-                            Produits
                           </Link>
                         </li>
                         <li>
